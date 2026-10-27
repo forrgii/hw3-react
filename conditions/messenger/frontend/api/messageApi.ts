@@ -1,20 +1,43 @@
 import type { Message } from "../types";
+import { getToken } from "../helpers/authStorage";
+import axios from "axios";
 
 const API_URL = import.meta.env?.VITE_API_URL || "http://localhost:3001";
 
-function authHeaders(token: string) {
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json"
-  };
+export async function getMessages(): Promise<Message[]> {
+  const token = getToken();
+  if (!token) {
+    throw new Error("No token");
+  }
+
+  const response = await fetch(`${API_URL}/messages`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  return response.json();
 }
 
-export async function getMessages(token: string): Promise<Message[]> {
-  // TODO: запросить GET /messages (Fetch) с заголовком Authorization Bearer <token>, вернуть список сообщений
-  return Promise.reject(new Error("Not implemented"));
-}
+export async function sendMessage(text: string): Promise<Message> {
+  const token = getToken();
+  if (!token) {
+    throw new Error("No token");
+  }
 
-export async function sendMessage(token: string, text: string): Promise<Message> {
-  // TODO: отправить POST /messages (Axios) c { text } и заголовком Authorization, вернуть созданное сообщение
-  return Promise.reject(new Error("Not implemented"));
+  const response = await axios.post<Message>(
+    `${API_URL}/messages`,
+    { text },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
 }

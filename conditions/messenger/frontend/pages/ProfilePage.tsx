@@ -1,40 +1,53 @@
 import React, { useEffect, useState } from "react";
+import { getProfile, updateProfile } from "../api/userApi";
+import { handleError } from "../helpers/handleError";
+import { ProfileCard } from "../components/ProfileCard";
 import type { User } from "../types";
 
-type Props = {
-  token: string;
-};
-
-export function ProfilePage({ token }: Props) {
+export function ProfilePage() {
   const [profile, setProfile] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-
-  const [nickname, setNickname] = useState<string>("");
-  const [bio, setBio] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // TODO: при монтировании получить профиль через userApi.getProfile(token)
-    // TODO: заполнить профиль и стейты nickname/bio, обрабатывать ошибки через handleError, выставлять loading
-  }, [token]);
+    loadProfile();
+  }, []);
 
-  const handleSave = async () => {
-    // TODO (опционально): вызвать userApi.updateProfile(token, { nickname, bio }), обновить профиль, обработать ошибки
+  const loadProfile = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getProfile();
+      setProfile(data);
+    } catch (err) {
+      setError(handleError(err));
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSave = async (data: { nickname: string; bio: string }) => {
+    setSaving(true);
+    setError("");
+    try {
+      const updated = await updateProfile(data);
+      setProfile(updated);
+    } catch (err) {
+      setError(handleError(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div>Загрузка профиля...</div>;
+  if (error) return <div style={{ color: "red" }}>{error}</div>;
+  if (!profile) return <div>Профиль не найден</div>;
 
   return (
     <div>
       <h2>Профиль</h2>
-      {loading && <p>Загрузка...</p>}
-      {error ? <p style={{ color: "red" }}>{error}</p> : null}
-      {/* TODO: отрисовать карточку профиля */}
-      <div style={{ marginTop: "12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-        <input value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="Ник" />
-        <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="Описание" />
-        <button onClick={handleSave} disabled={loading}>
-          Сохранить
-        </button>
-      </div>
+      <ProfileCard profile={profile} onSave={handleSave} saving={saving} />
     </div>
   );
 }

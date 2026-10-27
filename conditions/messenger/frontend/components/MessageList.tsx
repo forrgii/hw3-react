@@ -6,12 +6,13 @@ type Props = {
 };
 
 export function MessageList({ messages }: Props) {
-  if (!messages?.length) {
-    return <p>Нет сообщений</p>;
-  }
-
-  // TODO: отрисовать список сообщений (author, text, createdAt)
-  return <div>{/* TODO: список */}</div>;
+  return (
+    <ul>
+      {messages.map((msg) => (
+        <li key={msg.id}>
+          <strong>{msg.author}:</strong> {msg.text}
+        </li>
+      ))}
+    </ul>
+  );
 }
-
-export default MessageList;

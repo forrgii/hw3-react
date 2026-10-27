@@ -1,25 +1,51 @@
-import type { Message } from "../types";
+let socket: WebSocket | null = null;
 
-const WS_URL = import.meta.env?.VITE_WS_URL || "ws://localhost:3001";
+export function connectSocket(token: string, onMessage: (message: any) => void): WebSocket {
+  if (socket) {
+    socket.close();
+  }
 
-type SocketCallbacks = {
-  onMessage?: (message: Message) => void;
-  onStatus?: (status: string) => void;
-};
+  socket = new WebSocket(import.meta.env?.VITE_WS_URL || "ws://localhost:3001");
 
-export function connectSocket(token: string, { onMessage, onStatus }: SocketCallbacks) {
-  // TODO:
-  // 1) подключиться к WebSocket по WS_URL
-  // 2) при открытии сообщать статус "connected", при закрытии — "disconnected"
-  // 3) слушать сообщения; при type === "message:new" вызывать onMessage(payload)
-  // 4) вернуть методы sendMessage(text) -> отправка { type: "message:send", payload: { text, token } }
-  // 5) вернуть disconnect() для закрытия сокета
-  return {
-    sendMessage: (_text: string) => {
-      throw new Error("Not implemented");
-    },
-    disconnect: () => {
-      throw new Error("Not implemented");
+  socket.onopen = () => {
+    console.log("WebSocket connected");
+  };
+
+  socket.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === "message:new") {
+        onMessage(data.payload);
+      }
+    } catch (error) {
+      console.error("WebSocket message parse error", error);
     }
   };
+
+  socket.onclose = () => {
+    console.log("WebSocket disconnected");
+  };
+
+  return socket;
+}
+
+export function sendSocketMessage(text: string, token: string): void {
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    throw new Error("WebSocket not connected");
+  }
+
+  socket.send(
+    JSON.stringify({
+      type: "message:send",
+      text,
+      token,
+    })
+  );
+}
+
+export function disconnectSocket(): void {
+  if (socket) {
+    socket.close();
+    socket = null;
+  }
 }

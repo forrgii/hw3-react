@@ -1,23 +1,45 @@
 import type { User } from "../types";
+import { getToken } from "../helpers/authStorage";
 
 const API_URL = import.meta.env?.VITE_API_URL || "http://localhost:3001";
 
-function authHeaders(token: string) {
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json"
-  };
+export async function getProfile(): Promise<User> {
+  const token = getToken();
+  if (!token) {
+    throw new Error("No token");
+  }
+
+  const response = await fetch(`${API_URL}/users/me`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  return response.json();
 }
 
-export async function getProfile(token: string): Promise<User> {
-  // TODO: запросить GET /users/me (Fetch) с заголовком Authorization Bearer <token>, вернуть профиль
-  return Promise.reject(new Error("Not implemented"));
-}
+export async function updateProfile(data: Partial<Pick<User, "nickname" | "bio">>): Promise<User> {
+  const token = getToken();
+  if (!token) {
+    throw new Error("No token");
+  }
 
-export type UpdateProfilePayload = Partial<Pick<User, "nickname" | "bio">>;
+  const response = await fetch(`${API_URL}/users/me`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
 
-export async function updateProfile(token: string, { nickname, bio }: UpdateProfilePayload): Promise<User> {
-  // TODO: опционально отправить PUT /users/me (Fetch или Axios) с { nickname, bio } и заголовком Authorization
-  // Вернуть обновленный профиль
-  return Promise.reject(new Error("Not implemented"));
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  return response.json();
 }

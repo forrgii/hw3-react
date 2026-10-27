@@ -2,25 +2,25 @@ import React, { useState } from "react";
 
 type Props = {
   onSend: (text: string) => void;
-  disabled?: boolean;
+  disabled: boolean;
 };
 
 export function MessageInput({ onSend, disabled }: Props) {
-  const [text, setText] = useState<string>("");
+  const [text, setText] = useState("");
 
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    // TODO: по submit вызывать onSend с trim-текстом, чистить поле, не отправлять пустое
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!text.trim()) return;
+    onSend(text.trim());
+    setText("");
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "flex", gap: "8px" }}>
+    <form onSubmit={handleSubmit}>
       <input
-        type="text"
-        placeholder="Введите сообщение"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        style={{ flex: 1, padding: "8px" }}
+        placeholder="Введите сообщение"
         disabled={disabled}
       />
       <button type="submit" disabled={disabled || !text.trim()}>
@@ -29,5 +29,3 @@ export function MessageInput({ onSend, disabled }: Props) {
     </form>
   );
 }
-
-export default MessageInput;

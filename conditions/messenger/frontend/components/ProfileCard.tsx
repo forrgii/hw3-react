@@ -1,15 +1,37 @@
-import React from "react";
+import React, { useState } from "react";
 import type { User } from "../types";
 
 type Props = {
-  profile: User | null;
+  profile: User;
+  onSave: (data: { nickname: string; bio: string }) => void;
+  saving: boolean;
 };
 
-export function ProfileCard({ profile }: Props) {
-  if (!profile) return null;
+export function ProfileCard({ profile, onSave, saving }: Props) {
+  const [nickname, setNickname] = useState(profile.nickname);
+  const [bio, setBio] = useState(profile.bio);
 
-  // TODO: отобразить nickname, phone и bio из профиля (можно в простом div/карточке)
-  return <div>{/* TODO: профиль */}</div>;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({ nickname, bio });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <label>Телефон: {profile.phone}</label>
+      </div>
+      <div>
+        <label>Никнейм:</label>
+        <input value={nickname} onChange={(e) => setNickname(e.target.value)} />
+      </div>
+      <div>
+        <label>Описание:</label>
+        <textarea value={bio} onChange={(e) => setBio(e.target.value)} />
+      </div>
+      <button type="submit" disabled={saving}>
+        {saving ? "Сохранение..." : "Сохранить"}
+      </button>
+    </form>
+  );
 }
-
-export default ProfileCard;
